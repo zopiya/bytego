@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ByteGo - Binary Asset Manager</title>
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --card-bg: #ffffff;
+            --primary-color: #000000;
+            --accent-color: #0071e3;
+            --text-color: #1d1d1f;
+            --text-secondary: #86868b;
+            --border-color: #e5e5e5;
+            --success-color: #34c759;
+            --error-color: #ff3b30;
+            --btn-bg: #f5f5f7;
+            --btn-hover: #e8e8ed;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 680px; /* 稍微加宽以容纳按钮组 */
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .settings-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            color: var(--text-secondary);
+            transition: background 0.2s;
+        }
+
+        .settings-btn:hover {
+            background: #f5f5f7;
+            color: var(--text-color);
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--text-secondary);
+            background: #f8f8f8;
+            transform: translateY(-2px);
+        }
+
+        .drop-zone.drag-over {
+            border-color: var(--accent-color);
+            background: rgba(0, 113, 227, 0.04);
+            transform: scale(0.98);
+        }
+
+        .drop-zone.uploading {
+            pointer-events: none;
+            opacity: 0.8;
+            background: #fff;
+        }
+
+        .icon {
+            font-size: 42px;
+            margin-bottom: 16px;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .drop-zone:hover .icon {
+            transform: scale(1.1);
+        }
+
+        .instruction {
+            font-size: 16px;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .sub-instruction {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        /* Status Bar */
+        #status {
+            margin-top: 24px;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        #status.show { display: block; }
+        #status.normal { background: #f5f5f7; color: var(--text-secondary); }
+        #status.success { background: rgba(52, 199, 89, 0.1); color: var(--success-color); }
+        #status.error { background: rgba(255, 59, 48, 0.1); color: var(--error-color); }
+
+        /* History List */
+        .history-section {
+            margin-top: 40px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 24px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .history-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-count {
+            font-size: 12px;
+            background: #f0f0f0;
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-list::-webkit-scrollbar { width: 4px; }
+        .history-list::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #f5f5f7;
+            font-size: 14px;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            gap: 15px;
+        }
+
+        .history-item:hover {
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.01), transparent);
+        }
+
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 4px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Action Buttons Group */
+        .actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            background: var(--btn-bg);
+            border: 1px solid transparent;
+            color: var(--text-color);
+            font-weight: 600;
+            font-size: 11px;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            min-width: 45px;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: var(--btn-hover);
+            transform: translateY(-1px);
+        }
+
+        .action-btn:active {
+            transform: scale(0.96);
+        }
+
+        .action-btn.copied {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 380px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            text-align: center;
+        }
+
+        .modal-desc {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .auth-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .auth-btn {
+            width: 100%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .auth-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Mobile Adapt */
+        @media (max-width: 480px) {
+            .container { padding: 30px 20px; }
+            h1 { font-size: 24px; }
+            .history-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .actions { width: 100%; justify-content: flex-start; }
+            .action-btn { flex: 1; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>ByteGo</h1>
+            <button class="settings-btn" id="settingsBtn" title="Change Access Key">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+        </header>
+
+        <!-- Drop Zone -->
+        <div id="dropZone" class="drop-zone">
+            <span class="icon">📦</span>
+            <div class="instruction">Drop files or Paste (Ctrl+V)</div>
+            <div class="sub-instruction">Up to 10 files supported</div>
+            <input type="file" id="fileInput" hidden multiple>
+        </div>
+
+        <!-- Status Message -->
+        <div id="status"></div>
+
+        <!-- History List -->
+        <div class="history-section">
+            <div class="history-header">
+                <span class="history-title">Recent Uploads</span>
+                <span id="historyCount" class="history-count">0</span>
+            </div>
+            <ul id="historyList" class="history-list">
+                <!-- Items injected via JS -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-card">
+            <h2 class="modal-title">Welcome to ByteGo</h2>
+            <p class="modal-desc">Please enter your Access Key to continue.</p>
+            <input type="password" id="modalKeyInput" class="auth-input" placeholder="sk_live_xxxxxxxx..." autocomplete="off">
+            <button id="saveKeyBtn" class="auth-btn">Start Uploading</button>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const statusDiv = document.getElementById('status');
+        const historyList = document.getElementById('historyList');
+        const authModal = document.getElementById('authModal');
+        const modalKeyInput = document.getElementById('modalKeyInput');
+        const saveKeyBtn = document.getElementById('saveKeyBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const historyCount = document.getElementById('historyCount');
+
+        const STORAGE_KEY = 'bytego_access_key';
+        const HISTORY_STORAGE_KEY = 'bytego_upload_history';
+        const MAX_FILES = 10;
+        const HISTORY_LIMIT = 10;
+
+        // --- 1. Authentication Logic ---
+
+        function checkAuth() {
+            const key = localStorage.getItem(STORAGE_KEY);
+            if (!key) {
+                authModal.classList.add('active');
+                modalKeyInput.focus();
+                return false;
+            }
+            authModal.classList.remove('active');
+            return key;
+        }
+
+        saveKeyBtn.addEventListener('click', () => {
+            const val = modalKeyInput.value.trim();
+            if (val) {
+                localStorage.setItem(STORAGE_KEY, val);
+                checkAuth();
+                // 模拟数据展示（如果列表为空）
+                if (historyList.children.length === 0) simulateHistory();
+            } else {
+                modalKeyInput.style.borderColor = 'var(--error-color)';
+            }
+        });
+
+        modalKeyInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') saveKeyBtn.click();
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            modalKeyInput.value = localStorage.getItem(STORAGE_KEY) || '';
+            authModal.classList.add('active');
+            modalKeyInput.focus();
+            modalKeyInput.select();
+        });
+
+        // Initialize
+        window.addEventListener('load', () => {
+            const hasKey = checkAuth();
+            if (hasKey) {
+                loadHistoryFromStorage();
+            }
+        });
+
+        function loadHistoryFromStorage() {
+            try {
+                const stored = localStorage.getItem(HISTORY_STORAGE_KEY);
+                if (stored) {
+                    const history = JSON.parse(stored);
+                    history.forEach(item => {
+                        addToHistory(item.filename, item.url, item.success, item.size, false);
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to load history:', e);
+            }
+        }
+
+        function saveHistoryToStorage() {
+            try {
+                const items = Array.from(historyList.children).map(li => {
+                    const nameEl = li.querySelector('.file-name');
+                    const actionsEl = li.querySelector('.actions');
+                    const sizeEl = li.querySelector('.file-size');
+                    if (!nameEl) return null;
+
+                    const filename = nameEl.textContent;
+                    const success = !!actionsEl;
+                    let url = null;
+                    let size = null;
+
+                    if (success && actionsEl.querySelector('.action-btn')) {
+                        const btn = actionsEl.querySelector('.action-btn');
+                        url = btn.getAttribute('onclick').match(/'([^']+)'/)?.[1];
+                    }
+                    if (sizeEl) {
+                        size = sizeEl.textContent;
+                    }
+
+                    return { filename, url, success, size };
+                }).filter(Boolean);
+
+                localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(items));
+            } catch (e) {
+                console.error('Failed to save history:', e);
+            }
+        }
+
+
+        // --- 2. Upload Interaction ---
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleBatchUpload(e.target.files);
+        });
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        dropZone.addEventListener('dragover', () => dropZone.classList.add('drag-over'));
+        ['dragleave', 'drop'].forEach(evt => {
+            dropZone.addEventListener(evt, () => dropZone.classList.remove('drag-over'));
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const files = e.dataTransfer.files;
+            if (files.length) handleBatchUpload(files);
+        });
+
+        document.addEventListener('paste', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.clipboardData && e.clipboardData.files.length > 0) {
+                e.preventDefault();
+                handleBatchUpload(e.clipboardData.files);
+            }
+        });
+
+
+        // --- 3. Batch Upload Logic ---
+
+        async function handleBatchUpload(fileList) {
+            const key = checkAuth();
+            if (!key) return;
+
+            if (fileList.length > MAX_FILES) {
+                showStatus(`Too many files! Max ${MAX_FILES} allowed.`, 'error');
+                return;
+            }
+
+            const files = Array.from(fileList);
+            setUploading(true);
+            showStatus(`Preparing ${files.length} file(s)...`, 'normal');
+
+            const uploadedUrls = [];
+            let successCount = 0;
+            let failCount = 0;
+
+            const uploadPromises = files.map(async (file) => {
+                try {
+                    const url = await uploadSingleFile(file, key);
+                    uploadedUrls.push(url);
+                    successCount++;
+                    addToHistory(file.name, url, true, file.size);
+                    return url;
+                } catch (err) {
+                    failCount++;
+                    addToHistory(file.name, null, false, file.size);
+                    console.error(`Failed to upload ${file.name}:`, err);
+                    return null;
+                }
+            });
+
+            await Promise.all(uploadPromises);
+
+            setUploading(false);
+            fileInput.value = '';
+
+            if (successCount === 0) {
+                showStatus('All uploads failed.', 'error');
+            } else {
+                const validUrls = uploadedUrls.filter(u => u !== null);
+                if (validUrls.length > 0) {
+                    // 默认复制原始链接列表
+                    await navigator.clipboard.writeText(validUrls.join('\n'));
+                    let msg;
+                    if (files.length > 1) {
+                        if (failCount > 0) {
+                            msg = `${successCount}/${files.length} files uploaded successfully`;
+                        } else {
+                            msg = `Success! ${successCount} files uploaded.`;
+                        }
+                    } else {
+                        msg = `Success! File uploaded.`;
+                    }
+                    showStatus(msg, 'success');
+                }
+            }
+        }
+
+        async function uploadSingleFile(file, key) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // 模拟延迟，让你看到加载效果 (正式版删除)
+            // await new Promise(r => setTimeout(r, 600));
+
+            const res = await fetch('/upload', {
+                method: 'POST',
+                headers: { 'Authorization': key },
+                body: formData
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.msg || 'Server Error');
+            return data.url;
+        }
+
+
+        // --- 4. UI Helpers ---
+
+        function setUploading(isUploading) {
+            if (isUploading) {
+                dropZone.classList.add('uploading');
+                dropZone.querySelector('.instruction').innerText = 'Uploading...';
+                dropZone.querySelector('.icon').innerText = '⏳';
+            } else {
+                dropZone.classList.remove('uploading');
+                dropZone.querySelector('.instruction').innerText = 'Drop files or Paste (Ctrl+V)';
+                dropZone.querySelector('.icon').innerText = '📦';
+            }
+        }
+
+        function showStatus(msg, type) {
+            statusDiv.textContent = msg;
+            statusDiv.className = '';
+            statusDiv.classList.add('show', type);
+            if (type === 'success') {
+                setTimeout(() => statusDiv.classList.remove('show'), 4000);
+            }
+        }
+
+        function addToHistory(filename, url, isSuccess, fileSize = null, shouldSave = true) {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const sizeStr = fileSize ? formatFileSize(fileSize) : '';
+
+            if (isSuccess) {
+                // 成功状态：显示文件名和三个操作按钮
+                li.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name" title="${filename}">${filename}</div>
+                        <div class="file-meta">
+                            <span>${time}</span>
+                            ${sizeStr ? `<span class="file-size">${sizeStr}</span>` : ''}
+                            <span style="color:var(--success-color)">Success</span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="action-btn" onclick="copyToClip('${url}', 'raw', this)">Link</button>
+                        <button class="action-btn" onclick="copyToClip('${url}', 'md', this)">MD</button>
+                        <button class="action-btn" onclick="copyToClip('${url}', 'html', this)">HTML</button>
+                    </div>
+                `;
+            } else {
+                // 失败状态
+                li.innerHTML = `
+                    <div class="file-info">
+                        <div class="file-name" title="${filename}">${filename}</div>
+                        <div class="file-meta">
+                            <span style="color:var(--error-color)">Failed</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            historyList.insertBefore(li, historyList.firstChild);
+
+            // 限制列表长度
+            while (historyList.children.length > HISTORY_LIMIT) {
+                historyList.removeChild(historyList.lastChild);
+            }
+            updateHistoryCount();
+
+            // 保存到 LocalStorage
+            if (shouldSave) {
+                saveHistoryToStorage();
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes || bytes === 0) return '';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function updateHistoryCount() {
+            historyCount.textContent = historyList.children.length;
+        }
+
+        // 核心复制功能
+        window.copyToClip = async (url, type, btn) => {
+            let textToCopy = url;
+
+            if (type === 'md') {
+                textToCopy = `![](${url})`;
+            } else if (type === 'html') {
+                textToCopy = `<img src="${url}" alt="image" />`;
+            }
+
+            try {
+                await navigator.clipboard.writeText(textToCopy);
+
+                // 按钮反馈效果
+                const originalText = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+
+                // 1.5秒后恢复
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.classList.remove('copied');
+                }, 1500);
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+        };
+
+    </script>
+</body>
+</html>
