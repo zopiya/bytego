@@ -1,17 +1,20 @@
 # ByteGo 📦
 
+[中文文档](README_zh.md)
+
 **ByteGo** is a minimalist, self-hosted binary asset manager designed to decouple content (Markdown) from resources (images, PDFs, attachments). Upload files via paste, drag-drop, or click, and instantly get permanent CDN links for embedding in your blog, wiki, or notes.
 
 ## ✨ Features
 
-- 🎯 **Ultra-Simple Upload**: Paste (Ctrl+V), drag-drop, or click to upload up to 10 files simultaneously
-- 🔐 **Secure by Design**: Access key authentication with IP-based rate limiting (3 attempts, 1-hour ban)
-- 🗂️ **Smart File Naming**: Automatic MD5-based deduplication with 40-char length limits
-- 📂 **Organized Storage**: Date-based S3 paths (`YYYY/MM/DD/filename-hash.ext`)
-- 🔗 **Multi-Format Export**: Copy links as raw URL, Markdown, or HTML with one click
-- 📜 **Persistent History**: Last 10 uploads saved with file sizes (LocalStorage)
-- 🐳 **Docker-First**: Single-image deployment with health checks
-- ⚡ **Production-Ready**: Gunicorn WSGI server with multi-worker support
+- 🎯 **Ultra-Simple Upload**: Paste (Ctrl+V), drag-drop, or click to upload up to 10 files simultaneously.
+- 🚀 **High Performance**: Serial frontend uploads + Streaming backend transfer for minimal memory usage.
+- 🔐 **Secure by Design**: Access key authentication with IP-based rate limiting (3 attempts, 1-hour ban).
+- 🗂️ **Smart File Naming**: Automatic MD5-based deduplication and custom path templates.
+- 📂 **Organized Storage**: Date-based S3 paths (`YYYY/MM/DD/filename-hash.ext`).
+- 🔗 **Multi-Format Export**: Copy links as raw URL, Markdown, or HTML with one click.
+- 📜 **Persistent History**: Last 10 uploads saved locally.
+- 📝 **Advanced Logging**: Configurable log persistence with automatic rotation.
+- 🐳 **Docker-First**: Single-image deployment with health checks.
 
 ## 🏗️ Architecture
 
@@ -22,9 +25,9 @@
 └─────────────┘      └─────────────┘      └─────────────┘
 ```
 
-- **Frontend**: Single HTML file (no frameworks), 100% vanilla JavaScript
-- **Backend**: Flask + Boto3 for S3-compatible storage (AWS S3, Cloudflare R2, MinIO, etc.)
-- **Storage**: Any S3-compatible object storage with optional CDN
+- **Frontend**: Single HTML file (no frameworks), 100% vanilla JavaScript.
+- **Backend**: Flask + Boto3 for S3-compatible storage (AWS S3, Cloudflare R2, MinIO, Tencent COS, etc.).
+- **Storage**: Any S3-compatible object storage with optional CDN.
 
 ## 🚀 Quick Start
 
@@ -77,9 +80,9 @@ Open your browser and navigate to `http://localhost:8000`. Enter your `AUTH_KEY`
 
 ### Uploading Files
 
-1. **Paste**: Copy an image to clipboard, press `Ctrl+V` on the ByteGo page
-2. **Drag-Drop**: Drag files into the upload zone
-3. **Click**: Click the upload zone to select files
+1. **Paste**: Copy an image to clipboard, press `Ctrl+V` on the ByteGo page.
+2. **Drag-Drop**: Drag files into the upload zone.
+3. **Click**: Click the upload zone to select files.
 
 ### Getting Links
 
@@ -91,26 +94,39 @@ After upload, click one of the three buttons:
 
 ### Batch Upload
 
-Upload up to 10 files at once. All successful URLs are automatically copied to clipboard (newline-separated).
+Upload up to 10 files at once. The frontend processes files serially to ensure stability. All successful URLs are automatically copied to clipboard (newline-separated).
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-| Variable           | Required | Default       | Description            |
+| Variable        | Required | Default     | Description            |
+| :-------------- | :------- | :---------- | :--------------------- |
+| `S3_ENDPOINT`   | ✅       | -           | S3 API Endpoint        |
+| `S3_ACCESS_KEY` | ✅       | -           | S3 Access Key ID       |
+| `S3_SECRET_KEY` | ✅       | -           | S3 Secret Access Key   |
+| `S3_BUCKET`     | ✅       | -           | Bucket Name            |
+| `AUTH_KEY`      | ✅       | -           | Access Password        |
+| `PUBLIC_DOMAIN` | ❌       | S3_ENDPOINT | Public CDN Domain      |
+| `LOG_TO_FILE`   | ❌       | false       | Enable log persistence |
+| `LOG_DIR`       | ❌       | logs        | Log directory          |
+
+## 📄 License
+
+MIT License
 | ------------------ | -------- | ------------- | ---------------------- |
-| `S3_ENDPOINT`      | ✅       | -             | S3 endpoint URL        |
-| `S3_ACCESS_KEY`    | ✅       | -             | S3 access key          |
-| `S3_SECRET_KEY`    | ✅       | -             | S3 secret key          |
-| `S3_BUCKET`        | ✅       | -             | S3 bucket name         |
-| `S3_ACL`           | ❌       | `public-read` | S3 object ACL          |
-| `PUBLIC_DOMAIN`    | ⚠️       | `S3_ENDPOINT` | Public CDN URL prefix  |
-| `AUTH_KEY`         | ✅       | -             | Access key for uploads |
-| `MAX_FILE_SIZE_MB` | ❌       | `100`         | Max file size in MB    |
-| `FLASK_DEBUG`      | ❌       | `false`       | Enable debug mode      |
-| `PORT`             | ❌       | `8000`        | Server port            |
-| `GUNICORN_WORKERS` | ❌       | `auto`        | Number of workers      |
-| `LOG_LEVEL`        | ❌       | `info`        | Log level              |
+| `S3_ENDPOINT` | ✅ | - | S3 endpoint URL |
+| `S3_ACCESS_KEY` | ✅ | - | S3 access key |
+| `S3_SECRET_KEY` | ✅ | - | S3 secret key |
+| `S3_BUCKET` | ✅ | - | S3 bucket name |
+| `S3_ACL` | ❌ | `public-read` | S3 object ACL |
+| `PUBLIC_DOMAIN` | ⚠️ | `S3_ENDPOINT` | Public CDN URL prefix |
+| `AUTH_KEY` | ✅ | - | Access key for uploads |
+| `MAX_FILE_SIZE_MB` | ❌ | `100` | Max file size in MB |
+| `FLASK_DEBUG` | ❌ | `false` | Enable debug mode |
+| `PORT` | ❌ | `8000` | Server port |
+| `GUNICORN_WORKERS` | ❌ | `auto` | Number of workers |
+| `LOG_LEVEL` | ❌ | `info` | Log level |
 
 ### S3 Provider Examples
 

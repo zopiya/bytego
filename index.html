@@ -6,22 +6,60 @@
     <title>ByteGo - Binary Asset Manager</title>
     <style>
         :root {
-            --bg-color: #f0f2f5;
+            /* Light Theme (Paper-like) */
+            --bg-color: #fbfbf9;
             --card-bg: #ffffff;
-            --primary-color: #000000;
+            --primary-color: #1d1d1f;
             --accent-color: #0071e3;
             --text-color: #1d1d1f;
             --text-secondary: #86868b;
             --border-color: #e5e5e5;
             --success-color: #34c759;
             --error-color: #ff3b30;
-            --btn-bg: #f5f5f7;
-            --btn-hover: #e8e8ed;
+            --btn-bg: #f2f2f7;
+            --btn-hover: #e5e5ea;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --drop-bg: #fafafa;
+            --drop-hover: #f5f5f5;
+            --modal-overlay: rgba(0, 0, 0, 0.2);
+            --history-count-bg: #f2f2f7;
+            --item-border: #f2f2f7;
+            --item-hover-bg: #f9f9fa;
+            --meta-color: #86868b;
+            --input-bg: #ffffff;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Dark Theme */
+                --bg-color: #121212;
+                --card-bg: #1c1c1e;
+                --primary-color: #ffffff;
+                --accent-color: #0a84ff;
+                --text-color: #f5f5f7;
+                --text-secondary: #98989d;
+                --border-color: #38383a;
+                --success-color: #32d74b;
+                --error-color: #ff453a;
+                --btn-bg: #2c2c2e;
+                --btn-hover: #3a3a3c;
+                --shadow-color: rgba(0, 0, 0, 0.4);
+                --drop-bg: #252527;
+                --drop-hover: #2c2c2e;
+                --modal-overlay: rgba(0, 0, 0, 0.6);
+                --history-count-bg: #3a3a3c;
+                --item-border: #2c2c2e;
+                --item-hover-bg: #2c2c2e;
+                --meta-color: #8e8e93;
+                --input-bg: #1c1c1e;
+            }
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
+            /* Subtle paper noise texture */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
             color: var(--text-color);
             display: flex;
             justify-content: center;
@@ -29,18 +67,23 @@
             min-height: 100vh;
             margin: 0;
             padding: 20px;
-            overflow-x: hidden;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         .container {
             background: var(--card-bg);
             width: 100%;
-            max-width: 680px; /* 稍微加宽以容纳按钮组 */
+            max-width: 600px;
             padding: 40px;
             border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+            /* Elegant shadow */
+            box-shadow:
+                0 4px 6px -1px var(--shadow-color),
+                0 10px 15px -3px var(--shadow-color);
             position: relative;
             transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
         }
 
         /* Header */
@@ -48,74 +91,101 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
         }
 
         h1 {
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 700;
             margin: 0;
             letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #1d1d1f 0%, #434344 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text-color);
         }
 
-        .settings-btn {
-            background: none;
+        .icon-btn {
+            background: transparent;
             border: none;
             cursor: pointer;
             padding: 8px;
-            border-radius: 50%;
+            border-radius: 8px;
             color: var(--text-secondary);
-            transition: background 0.2s;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .settings-btn:hover {
-            background: #f5f5f7;
+        .icon-btn:hover {
+            background: var(--btn-hover);
             color: var(--text-color);
         }
 
         /* Drop Zone */
         .drop-zone {
-            border: 2px dashed var(--border-color);
+            border: 1px dashed var(--border-color);
             border-radius: 16px;
-            padding: 50px 20px;
+            padding: 48px 24px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #fafafa;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--drop-bg);
             position: relative;
             overflow: hidden;
+            margin-bottom: 24px;
         }
 
         .drop-zone:hover {
             border-color: var(--text-secondary);
-            background: #f8f8f8;
-            transform: translateY(-2px);
+            background: var(--drop-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--shadow-color);
         }
 
         .drop-zone.drag-over {
             border-color: var(--accent-color);
-            background: rgba(0, 113, 227, 0.04);
-            transform: scale(0.98);
+            background: rgba(0, 113, 227, 0.05);
+            transform: scale(0.99);
         }
 
         .drop-zone.uploading {
             pointer-events: none;
-            opacity: 0.8;
-            background: #fff;
+            opacity: 1; /* Keep full opacity to show progress clearly */
+            background: var(--drop-hover);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 60%;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            margin: 16px auto 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .drop-zone.uploading .progress-container {
+            display: block;
         }
 
         .icon {
-            font-size: 42px;
+            font-size: 36px;
             margin-bottom: 16px;
             display: block;
+            opacity: 0.9;
             transition: transform 0.3s;
         }
 
         .drop-zone:hover .icon {
-            transform: scale(1.1);
+            transform: scale(1.1) rotate(5deg);
         }
 
         .instruction {
@@ -132,24 +202,25 @@
 
         /* Status Bar */
         #status {
-            margin-top: 24px;
-            padding: 12px;
+            margin-top: 16px;
+            padding: 12px 16px;
             border-radius: 10px;
             text-align: center;
             font-size: 14px;
             font-weight: 500;
             display: none;
-            animation: fadeIn 0.3s;
+            animation: fadeIn 0.2s;
+            margin-bottom: 20px;
         }
 
         #status.show { display: block; }
-        #status.normal { background: #f5f5f7; color: var(--text-secondary); }
+        #status.normal { background: var(--btn-bg); color: var(--text-secondary); }
         #status.success { background: rgba(52, 199, 89, 0.1); color: var(--success-color); }
         #status.error { background: rgba(255, 59, 48, 0.1); color: var(--error-color); }
 
         /* History List */
         .history-section {
-            margin-top: 40px;
+            margin-top: 32px;
             border-top: 1px solid var(--border-color);
             padding-top: 24px;
         }
@@ -159,48 +230,60 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 16px;
+            padding: 0 4px;
+        }
+
+        .history-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .history-title {
-            font-size: 13px;
-            font-weight: 700;
+            font-size: 12px;
+            font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .history-count {
-            font-size: 12px;
-            background: #f0f0f0;
+            font-size: 11px;
+            background: var(--history-count-bg);
             padding: 2px 8px;
             border-radius: 10px;
             color: var(--text-secondary);
+            font-weight: 600;
+            min-width: 18px;
+            text-align: center;
         }
 
         .history-list {
             list-style: none;
             padding: 0;
             margin: 0;
-            max-height: 400px;
+            max-height: 360px;
             overflow-y: auto;
         }
 
-        .history-list::-webkit-scrollbar { width: 4px; }
-        .history-list::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
+        .history-list::-webkit-scrollbar { width: 3px; }
+        .history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
         .history-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 0;
-            border-bottom: 1px solid #f5f5f7;
+            padding: 14px 10px;
+            border-bottom: 1px solid var(--item-border);
             font-size: 14px;
-            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            gap: 15px;
+            animation: slideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            gap: 16px;
+            border-radius: 8px;
+            transition: background 0.1s;
         }
 
         .history-item:hover {
-            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.01), transparent);
+            background: var(--item-hover-bg);
         }
 
         .file-info {
@@ -208,6 +291,7 @@
             flex-direction: column;
             overflow: hidden;
             flex-grow: 1;
+            gap: 3px;
         }
 
         .file-name {
@@ -221,8 +305,7 @@
 
         .file-meta {
             font-size: 12px;
-            color: #aaa;
-            margin-top: 4px;
+            color: var(--meta-color);
             display: flex;
             gap: 10px;
             align-items: center;
@@ -233,35 +316,47 @@
             display: flex;
             gap: 6px;
             flex-shrink: 0;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .history-item:hover .actions {
+            opacity: 1;
+        }
+
+        /* Mobile: always show actions */
+        @media (max-width: 480px) {
+            .actions { opacity: 1; }
         }
 
         .action-btn {
-            background: var(--btn-bg);
-            border: 1px solid transparent;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
             color: var(--text-color);
-            font-weight: 600;
+            font-weight: 500;
             font-size: 11px;
-            padding: 6px 10px;
+            padding: 5px 10px;
             border-radius: 6px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.1s;
             white-space: nowrap;
-            min-width: 45px;
+            min-width: 40px;
             text-align: center;
         }
 
         .action-btn:hover {
             background: var(--btn-hover);
-            transform: translateY(-1px);
+            border-color: var(--text-secondary);
         }
 
         .action-btn:active {
-            transform: scale(0.96);
+            transform: scale(0.97);
         }
 
         .action-btn.copied {
-            background: var(--primary-color);
-            color: white;
+            background: var(--text-color);
+            color: var(--card-bg);
+            border-color: var(--text-color);
         }
 
         /* --- Modal Styles --- */
@@ -271,7 +366,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.4);
+            background: var(--modal-overlay);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             display: flex;
@@ -291,12 +386,13 @@
         .modal-card {
             background: var(--card-bg);
             width: 90%;
-            max-width: 380px;
-            padding: 30px;
+            max-width: 360px;
+            padding: 32px;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.2);
             transform: scale(0.95);
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid var(--border-color);
         }
 
         .modal-overlay.active .modal-card {
@@ -308,6 +404,7 @@
             font-weight: 700;
             margin: 0 0 10px 0;
             text-align: center;
+            color: var(--text-color);
         }
 
         .modal-desc {
@@ -320,7 +417,9 @@
         .auth-input {
             width: 100%;
             padding: 12px 16px;
-            border: 2px solid var(--border-color);
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-color);
             border-radius: 12px;
             font-family: monospace;
             font-size: 15px;
@@ -336,12 +435,12 @@
 
         .auth-btn {
             width: 100%;
-            background: var(--primary-color);
-            color: white;
+            background: var(--text-color);
+            color: var(--card-bg);
             border: none;
-            padding: 14px;
+            padding: 12px;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.1s, opacity 0.2s;
@@ -353,10 +452,11 @@
 
         /* Mobile Adapt */
         @media (max-width: 480px) {
-            .container { padding: 30px 20px; }
-            h1 { font-size: 24px; }
-            .history-item { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .actions { width: 100%; justify-content: flex-start; }
+            .container { padding: 24px 20px; border-radius: 0; min-height: 100vh; box-shadow: none; border: none; }
+            body { padding: 0; align-items: flex-start; }
+            h1 { font-size: 22px; }
+            .history-item { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .actions { width: 100%; justify-content: flex-start; opacity: 1; }
             .action-btn { flex: 1; }
         }
 
@@ -369,7 +469,7 @@
     <div class="container">
         <header>
             <h1>ByteGo</h1>
-            <button class="settings-btn" id="settingsBtn" title="Change Access Key">
+            <button class="icon-btn" id="settingsBtn" title="Change Access Key">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
         </header>
@@ -379,6 +479,9 @@
             <span class="icon">📦</span>
             <div class="instruction">Drop files or Paste (Ctrl+V)</div>
             <div class="sub-instruction">Up to 10 files supported</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
             <input type="file" id="fileInput" hidden multiple>
         </div>
 
@@ -388,8 +491,13 @@
         <!-- History List -->
         <div class="history-section">
             <div class="history-header">
-                <span class="history-title">Recent Uploads</span>
-                <span id="historyCount" class="history-count">0</span>
+                <div class="history-title-group">
+                    <span class="history-title">Recent Uploads</span>
+                    <span id="historyCount" class="history-count">0</span>
+                </div>
+                <button class="icon-btn" id="clearHistoryBtn" title="Clear History">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
             </div>
             <ul id="historyList" class="history-list">
                 <!-- Items injected via JS -->
@@ -411,18 +519,20 @@
         // DOM Elements
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
+        const progressBar = document.getElementById('progressBar');
         const statusDiv = document.getElementById('status');
         const historyList = document.getElementById('historyList');
         const authModal = document.getElementById('authModal');
         const modalKeyInput = document.getElementById('modalKeyInput');
         const saveKeyBtn = document.getElementById('saveKeyBtn');
         const settingsBtn = document.getElementById('settingsBtn');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
         const historyCount = document.getElementById('historyCount');
 
         const STORAGE_KEY = 'bytego_access_key';
         const HISTORY_STORAGE_KEY = 'bytego_upload_history';
         const MAX_FILES = 10;
-        const HISTORY_LIMIT = 10;
+        const HISTORY_LIMIT = 20; // 增加历史记录上限
 
         // --- 1. Authentication Logic ---
 
@@ -443,7 +553,7 @@
                 localStorage.setItem(STORAGE_KEY, val);
                 checkAuth();
                 // 模拟数据展示（如果列表为空）
-                if (historyList.children.length === 0) simulateHistory();
+                // if (historyList.children.length === 0) simulateHistory();
             } else {
                 modalKeyInput.style.borderColor = 'var(--error-color)';
             }
@@ -460,6 +570,14 @@
             modalKeyInput.select();
         });
 
+        clearHistoryBtn.addEventListener('click', () => {
+            if (confirm('Clear upload history?')) {
+                localStorage.removeItem(HISTORY_STORAGE_KEY);
+                historyList.innerHTML = '';
+                updateHistoryCount();
+            }
+        });
+
         // Initialize
         window.addEventListener('load', () => {
             const hasKey = checkAuth();
@@ -474,7 +592,7 @@
                 if (stored) {
                     const history = JSON.parse(stored);
                     history.forEach(item => {
-                        addToHistory(item.filename, item.url, item.success, item.size, false);
+                        addToHistory(item.filename, item.url, item.success, 0, false);
                     });
                 }
             } catch (e) {
@@ -487,23 +605,18 @@
                 const items = Array.from(historyList.children).map(li => {
                     const nameEl = li.querySelector('.file-name');
                     const actionsEl = li.querySelector('.actions');
-                    const sizeEl = li.querySelector('.file-size');
                     if (!nameEl) return null;
 
                     const filename = nameEl.textContent;
                     const success = !!actionsEl;
                     let url = null;
-                    let size = null;
 
                     if (success && actionsEl.querySelector('.action-btn')) {
                         const btn = actionsEl.querySelector('.action-btn');
                         url = btn.getAttribute('onclick').match(/'([^']+)'/)?.[1];
                     }
-                    if (sizeEl) {
-                        size = sizeEl.textContent;
-                    }
 
-                    return { filename, url, success, size };
+                    return { filename, url, success };
                 }).filter(Boolean);
 
                 localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(items));
@@ -559,28 +672,28 @@
 
             const files = Array.from(fileList);
             setUploading(true);
-            showStatus(`Preparing ${files.length} file(s)...`, 'normal');
 
             const uploadedUrls = [];
             let successCount = 0;
             let failCount = 0;
 
-            const uploadPromises = files.map(async (file) => {
+            // Serial upload loop
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                showStatus(`Uploading ${i + 1}/${files.length}: ${file.name}...`, 'normal');
+
                 try {
                     const url = await uploadSingleFile(file, key);
                     uploadedUrls.push(url);
                     successCount++;
                     addToHistory(file.name, url, true, file.size);
-                    return url;
                 } catch (err) {
                     failCount++;
-                    addToHistory(file.name, null, false, file.size);
                     console.error(`Failed to upload ${file.name}:`, err);
-                    return null;
+                    // Optional: Add failed item to history with error status
+                    // addToHistory(file.name, null, false, file.size);
                 }
-            });
-
-            await Promise.all(uploadPromises);
+            }
 
             setUploading(false);
             fileInput.value = '';
@@ -590,12 +703,13 @@
             } else {
                 const validUrls = uploadedUrls.filter(u => u !== null);
                 if (validUrls.length > 0) {
-                    // 默认复制原始链接列表
+                    // Copy URLs to clipboard
                     await navigator.clipboard.writeText(validUrls.join('\n'));
+
                     let msg;
                     if (files.length > 1) {
                         if (failCount > 0) {
-                            msg = `${successCount}/${files.length} files uploaded successfully`;
+                            msg = `${successCount}/${files.length} files uploaded successfully. (${failCount} failed)`;
                         } else {
                             msg = `Success! ${successCount} files uploaded.`;
                         }
@@ -631,30 +745,32 @@
         function setUploading(isUploading) {
             if (isUploading) {
                 dropZone.classList.add('uploading');
-                dropZone.querySelector('.instruction').innerText = 'Uploading...';
                 dropZone.querySelector('.icon').innerText = '⏳';
+                // Instruction text is updated in the loop
             } else {
                 dropZone.classList.remove('uploading');
                 dropZone.querySelector('.instruction').innerText = 'Drop files or Paste (Ctrl+V)';
+                dropZone.querySelector('.sub-instruction').innerText = 'Up to 10 files supported';
                 dropZone.querySelector('.icon').innerText = '📦';
+                updateProgress(0);
             }
+        }
+
+        function updateProgress(percent) {
+            progressBar.style.width = `${percent}%`;
         }
 
         function showStatus(msg, type) {
             statusDiv.textContent = msg;
             statusDiv.className = '';
             statusDiv.classList.add('show', type);
-            if (type === 'success') {
-                setTimeout(() => statusDiv.classList.remove('show'), 4000);
-            }
         }
 
-        function addToHistory(filename, url, isSuccess, fileSize = null, shouldSave = true) {
+        function addToHistory(filename, url, isSuccess, fileSize, shouldSave = true) {
             const li = document.createElement('li');
             li.className = 'history-item';
 
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const sizeStr = fileSize ? formatFileSize(fileSize) : '';
 
             if (isSuccess) {
                 // 成功状态：显示文件名和三个操作按钮
@@ -663,7 +779,6 @@
                         <div class="file-name" title="${filename}">${filename}</div>
                         <div class="file-meta">
                             <span>${time}</span>
-                            ${sizeStr ? `<span class="file-size">${sizeStr}</span>` : ''}
                             <span style="color:var(--success-color)">Success</span>
                         </div>
                     </div>
