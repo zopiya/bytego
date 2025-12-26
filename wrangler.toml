@@ -1,0 +1,33 @@
+name = "bytego"
+main = "src/index.ts"
+compatibility_date = "2023-12-01"
+
+# Router
+routes = [
+	{ pattern = "bytego.yourdomain.com", custom_domain = true }
+]
+
+[vars]
+# Security: Set this via `wrangler secret put AUTH_KEY`
+# AUTH_KEY = "your-secret-key"
+
+# Your custom domain (R2 CDN Domain)
+PUBLIC_DOMAIN = "https://cdn.yourdomain.com"
+
+# App Title
+APP_TITLE = "ByteGo"
+
+# CORS Allowed Origins (Comma separated)
+CORS_ORIGINS = "https://bytego.yourdomain.com,http://localhost:8787"
+
+# Default upload path format
+UPLOAD_PATH_FORMAT = "{year}/{month}/{day}/{randomkey16}{ext}"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "bytego"
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+fallthrough = true
