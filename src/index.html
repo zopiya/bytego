@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ByteGo - Binary Asset Manager</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><text y='50%' x='50%' text-anchor='middle' alignment-baseline='central' font-size='56'>📦</text></svg>">
+    <title>{{APP_TITLE}}</title>
     <style>
         :root {
             /* Light Theme (Paper-like) */
@@ -671,6 +672,15 @@
             }
 
             const files = Array.from(fileList);
+
+            // Check file sizes
+            for (const file of files) {
+                if (file.size > 100 * 1024 * 1024) {
+                    showStatus(`File ${file.name} is too large (>100MB).`, 'error');
+                    return;
+                }
+            }
+
             setUploading(true);
 
             const uploadedUrls = [];
@@ -725,7 +735,7 @@
             const formData = new FormData();
             formData.append('file', file);
 
-            // 模拟延迟，让你看到加载效果 (正式版删除)
+            // Simulate delay for visual effect (remove in prod)
             // await new Promise(r => setTimeout(r, 600));
 
             const res = await fetch('/upload', {
@@ -773,7 +783,7 @@
             const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             if (isSuccess) {
-                // 成功状态：显示文件名和三个操作按钮
+                // Success state: show filename and action buttons
                 li.innerHTML = `
                     <div class="file-info">
                         <div class="file-name" title="${filename}">${filename}</div>
@@ -789,7 +799,7 @@
                     </div>
                 `;
             } else {
-                // 失败状态
+                // Failure state
                 li.innerHTML = `
                     <div class="file-info">
                         <div class="file-name" title="${filename}">${filename}</div>
@@ -802,13 +812,13 @@
 
             historyList.insertBefore(li, historyList.firstChild);
 
-            // 限制列表长度
+            // Limit list length
             while (historyList.children.length > HISTORY_LIMIT) {
                 historyList.removeChild(historyList.lastChild);
             }
             updateHistoryCount();
 
-            // 保存到 LocalStorage
+            // Save to LocalStorage
             if (shouldSave) {
                 saveHistoryToStorage();
             }
@@ -826,7 +836,7 @@
             historyCount.textContent = historyList.children.length;
         }
 
-        // 核心复制功能
+// Core copy function
         window.copyToClip = async (url, type, btn) => {
             let textToCopy = url;
 
@@ -836,21 +846,55 @@
                 textToCopy = `<img src="${url}" alt="image" />`;
             }
 
-            try {
-                await navigator.clipboard.writeText(textToCopy);
-
-                // 按钮反馈效果
+            const showSuccess = () => {
+                // Button feedback effect
                 const originalText = btn.textContent;
                 btn.textContent = 'Copied!';
                 btn.classList.add('copied');
 
-                // 1.5秒后恢复
+                // Restore after 1.5s
                 setTimeout(() => {
                     btn.textContent = originalText;
                     btn.classList.remove('copied');
                 }, 1500);
+            };
+
+            try {
+                // Try modern API first
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(textToCopy);
+                    showSuccess();
+                } else {
+                    throw new Error('Clipboard API unavailable');
+                }
             } catch (err) {
-                console.error('Copy failed', err);
+                console.warn('Clipboard API failed, trying fallback...', err);
+                // Fallback: use textarea + execCommand
+                try {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = textToCopy;
+
+                    // Ensure textarea is invisible but selectable
+                    textArea.style.position = "fixed";
+                    textArea.style.left = "-9999px";
+                    textArea.style.top = "0";
+                    document.body.appendChild(textArea);
+
+                    textArea.focus();
+                    textArea.select();
+
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+
+                    if (successful) {
+                        showSuccess();
+                    } else {
+                        showStatus('Copy failed. Please copy manually.', 'error');
+                    }
+                } catch (fallbackErr) {
+                    console.error('Fallback copy failed', fallbackErr);
+                    showStatus('Copy failed. Please copy manually.', 'error');
+                }
             }
         };
 
