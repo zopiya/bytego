@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'><text y='50%' x='50%' text-anchor='middle' alignment-baseline='central' font-size='56'>📦</text></svg>">
+    <title>{{APP_TITLE}}</title>
+    <style>
+        :root {
+            /* Light Theme (Paper-like) */
+            --bg-color: #fbfbf9;
+            --card-bg: #ffffff;
+            --primary-color: #1d1d1f;
+            --accent-color: #0071e3;
+            --text-color: #1d1d1f;
+            --text-secondary: #86868b;
+            --border-color: #e5e5e5;
+            --success-color: #34c759;
+            --error-color: #ff3b30;
+            --btn-bg: #f2f2f7;
+            --btn-hover: #e5e5ea;
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --drop-bg: #fafafa;
+            --drop-hover: #f5f5f5;
+            --modal-overlay: rgba(0, 0, 0, 0.2);
+            --history-count-bg: #f2f2f7;
+            --item-border: #f2f2f7;
+            --item-hover-bg: #f9f9fa;
+            --meta-color: #86868b;
+            --input-bg: #ffffff;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Dark Theme */
+                --bg-color: #121212;
+                --card-bg: #1c1c1e;
+                --primary-color: #ffffff;
+                --accent-color: #0a84ff;
+                --text-color: #f5f5f7;
+                --text-secondary: #98989d;
+                --border-color: #38383a;
+                --success-color: #32d74b;
+                --error-color: #ff453a;
+                --btn-bg: #2c2c2e;
+                --btn-hover: #3a3a3c;
+                --shadow-color: rgba(0, 0, 0, 0.4);
+                --drop-bg: #252527;
+                --drop-hover: #2c2c2e;
+                --modal-overlay: rgba(0, 0, 0, 0.6);
+                --history-count-bg: #3a3a3c;
+                --item-border: #2c2c2e;
+                --item-hover-bg: #2c2c2e;
+                --meta-color: #8e8e93;
+                --input-bg: #1c1c1e;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            /* Subtle paper noise texture */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            padding: 40px;
+            border-radius: 24px;
+            /* Elegant shadow */
+            box-shadow:
+                0 4px 6px -1px var(--shadow-color),
+                0 10px 15px -3px var(--shadow-color);
+            position: relative;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.02em;
+            color: var(--text-color);
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: var(--btn-hover);
+            color: var(--text-color);
+        }
+
+        /* Drop Zone */
+        .drop-zone {
+            border: 1px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--drop-bg);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .drop-zone:hover {
+            border-color: var(--text-secondary);
+            background: var(--drop-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .drop-zone.drag-over {
+            border-color: var(--accent-color);
+            background: rgba(0, 113, 227, 0.05);
+            transform: scale(0.99);
+        }
+
+        .drop-zone.uploading {
+            pointer-events: none;
+            opacity: 1; /* Keep full opacity to show progress clearly */
+            background: var(--drop-hover);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 60%;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            margin: 16px auto 0;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .drop-zone.uploading .progress-container {
+            display: block;
+        }
+
+        .icon {
+            font-size: 36px;
+            margin-bottom: 16px;
+            display: block;
+            opacity: 0.9;
+            transition: transform 0.3s;
+        }
+
+        .drop-zone:hover .icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .instruction {
+            font-size: 16px;
+            color: var(--text-color);
+            font-weight: 600;
+        }
+
+        .sub-instruction {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        /* Status Bar */
+        #status {
+            margin-top: 16px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+            animation: fadeIn 0.2s;
+            margin-bottom: 20px;
+        }
+
+        #status.show { display: block; }
+        #status.normal { background: var(--btn-bg); color: var(--text-secondary); }
+        #status.success { background: rgba(52, 199, 89, 0.1); color: var(--success-color); }
+        #status.error { background: rgba(255, 59, 48, 0.1); color: var(--error-color); }
+
+        /* History List */
+        .history-section {
+            margin-top: 32px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 24px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+
+        .history-title-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .history-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .history-count {
+            font-size: 11px;
+            background: var(--history-count-bg);
+            padding: 2px 8px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        .action-btn:focus-visible,
+        .icon-btn:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
+        .is-hidden {
+            display: none !important;
+        }
+
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 360px;
+            overflow-y: auto;
+        }
+
+        .history-list::-webkit-scrollbar { width: 3px; }
+        .history-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 10px;
+            border-bottom: 1px solid var(--item-border);
+            font-size: 14px;
+            animation: slideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            gap: 16px;
+            border-radius: 8px;
+            transition: background 0.1s;
+        }
+
+        .history-item:hover {
+            background: var(--item-hover-bg);
+        }
+
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            flex-grow: 1;
+            gap: 3px;
+        }
+
+        .file-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-color);
+            font-size: 14px;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: var(--meta-color);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* Action Buttons Group */
+        .actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .history-item:hover .actions {
+            opacity: 1;
+        }
+
+        /* Mobile: always show actions */
+        @media (max-width: 480px) {
+            .actions { opacity: 1; }
+        }
+
+        .action-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            font-weight: 500;
+            font-size: 11px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.1s;
+            white-space: nowrap;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: var(--btn-hover);
+            border-color: var(--text-secondary);
+        }
+
+        .action-btn:active {
+            transform: scale(0.97);
+        }
+
+        .action-btn.copied {
+            background: var(--text-color);
+            color: var(--card-bg);
+            border-color: var(--text-color);
+        }
+
+        .action-btn.danger {
+            color: var(--error-color);
+            border-color: rgba(255, 59, 48, 0.18);
+            background: rgba(255, 59, 48, 0.04);
+            min-width: 32px;
+        }
+
+        .action-btn.danger:hover {
+            color: #fff;
+            border-color: var(--error-color);
+            background: var(--error-color);
+        }
+
+        .empty-state {
+            color: var(--text-secondary);
+            font-size: 13px;
+            padding: 16px 10px;
+            text-align: center;
+        }
+
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            width: 90%;
+            max-width: 360px;
+            padding: 32px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1px solid var(--border-color);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 10px 0;
+            text-align: center;
+            color: var(--text-color);
+        }
+
+        .modal-desc {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .auth-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-color);
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 15px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            margin-bottom: 20px;
+        }
+
+        .auth-input:focus {
+            border-color: var(--accent-color);
+        }
+
+        .auth-btn {
+            width: 100%;
+            background: var(--text-color);
+            color: var(--card-bg);
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, opacity 0.2s;
+        }
+
+        .auth-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Mobile Adapt */
+        @media (max-width: 480px) {
+            .container { padding: 24px 20px; border-radius: 0; min-height: 100vh; box-shadow: none; border: none; }
+            body { padding: 0; align-items: flex-start; }
+            h1 { font-size: 22px; }
+            .history-item { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .actions { width: 100%; justify-content: flex-start; opacity: 1; }
+            .action-btn { flex: 1; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>{{APP_TITLE}}</h1>
+            <button class="icon-btn" id="settingsBtn" title="更换 Access Key">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </button>
+        </header>
+
+        <!-- Drop Zone -->
+        <div id="dropZone" class="drop-zone">
+            <span class="icon">📦</span>
+            <div class="instruction">拖入文件或粘贴上传</div>
+            <div class="sub-instruction">单次最多 10 个文件</div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+            <input type="file" id="fileInput" hidden multiple>
+        </div>
+
+        <!-- Status Message -->
+        <div id="status"></div>
+
+        <!-- History List -->
+        <div class="history-section">
+            <div class="history-header">
+                <div class="history-title-group">
+                    <span class="history-title">最近上传</span>
+                    <span id="historyCount" class="history-count">0</span>
+                </div>
+                <button class="icon-btn" id="clearHistoryBtn" title="清空本地历史">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+            </div>
+            <ul id="historyList" class="history-list">
+                <!-- Items injected via JS -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
+        <div class="modal-card">
+            <h2 class="modal-title" id="authModalTitle">连接 ByteGo</h2>
+            <p class="modal-desc">输入 Access Key 后开始上传。</p>
+            <input type="password" id="modalKeyInput" class="auth-input" placeholder="Access Key" autocomplete="off">
+            <button id="saveKeyBtn" class="auth-btn">开始上传</button>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const progressBar = document.getElementById('progressBar');
+        const statusDiv = document.getElementById('status');
+        const historyList = document.getElementById('historyList');
+        const authModal = document.getElementById('authModal');
+        const modalKeyInput = document.getElementById('modalKeyInput');
+        const saveKeyBtn = document.getElementById('saveKeyBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+        const historyCount = document.getElementById('historyCount');
+
+        const STORAGE_KEY = 'bytego_access_key';
+        const DB_NAME = 'bytego';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'uploads';
+        const MAX_FILES = 10;
+        const HISTORY_LIMIT = 50;
+        const DELETE_MODE = normalizeDeleteMode('{{DELETE_MODE}}');
+
+        let dbPromise = null;
+
+        window.addEventListener('load', async () => {
+            setupInteractions();
+            checkAuth();
+            await renderHistory().catch(() => {
+                historyList.replaceChildren(createEmptyState('本地历史暂不可用。'));
+                showStatus('无法读取本地历史，上传仍可继续。', 'error');
+            });
+        });
+
+        function setupInteractions() {
+            saveKeyBtn.addEventListener('click', saveAccessKey);
+            modalKeyInput.addEventListener('keypress', (event) => {
+                if (event.key === 'Enter') saveAccessKey();
+            });
+            settingsBtn.setAttribute('aria-label', '更换 Access Key');
+            settingsBtn.addEventListener('click', openAuthModal);
+            clearHistoryBtn.setAttribute('aria-label', '清空本地历史');
+            clearHistoryBtn.addEventListener('click', clearLocalHistory);
+
+            dropZone.setAttribute('role', 'button');
+            dropZone.setAttribute('tabindex', '0');
+            dropZone.setAttribute('aria-label', '上传文件');
+            dropZone.addEventListener('click', () => fileInput.click());
+            dropZone.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    fileInput.click();
+                }
+            });
+            fileInput.addEventListener('change', (event) => {
+                if (event.target.files.length) handleBatchUpload(event.target.files);
+            });
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+                dropZone.addEventListener(eventName, (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+            });
+            dropZone.addEventListener('dragover', () => dropZone.classList.add('drag-over'));
+            ['dragleave', 'drop'].forEach((eventName) => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'));
+            });
+            dropZone.addEventListener('drop', (event) => {
+                const files = event.dataTransfer.files;
+                if (files.length) handleBatchUpload(files);
+            });
+
+            document.addEventListener('paste', (event) => {
+                if (event.target.tagName === 'INPUT') return;
+                if (event.clipboardData && event.clipboardData.files.length > 0) {
+                    event.preventDefault();
+                    handleBatchUpload(event.clipboardData.files);
+                }
+            });
+        }
+
+        function checkAuth() {
+            const key = localStorage.getItem(STORAGE_KEY);
+            if (!key) {
+                authModal.classList.add('active');
+                modalKeyInput.focus();
+                return null;
+            }
+            authModal.classList.remove('active');
+            return key;
+        }
+
+        function saveAccessKey() {
+            const value = modalKeyInput.value.trim();
+            if (!value) {
+                modalKeyInput.style.borderColor = 'var(--error-color)';
+                return;
+            }
+            localStorage.setItem(STORAGE_KEY, value);
+            modalKeyInput.style.borderColor = '';
+            checkAuth();
+        }
+
+        function openAuthModal() {
+            modalKeyInput.value = localStorage.getItem(STORAGE_KEY) || '';
+            authModal.classList.add('active');
+            modalKeyInput.focus();
+            modalKeyInput.select();
+        }
+
+        async function openDb() {
+            if (dbPromise) return dbPromise;
+            dbPromise = new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = () => {
+                    const db = request.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('uploadedAt', 'uploadedAt');
+                        store.createIndex('status', 'status');
+                    }
+                };
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error || new Error('IndexedDB open failed'));
+            });
+            return dbPromise;
+        }
+
+        async function dbRequest(mode, action) {
+            const db = await openDb();
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, mode);
+                const store = tx.objectStore(STORE_NAME);
+                let request;
+                tx.onabort = () => reject(tx.error || new Error('IndexedDB transaction aborted'));
+                try {
+                    request = action(store);
+                } catch (err) {
+                    tx.abort();
+                    reject(err);
+                    return;
+                }
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error || new Error('IndexedDB request failed'));
+            });
+        }
+
+        async function saveRecord(record) {
+            await dbRequest('readwrite', (store) => store.put(record));
+            await pruneHistory();
+        }
+
+        async function getRecord(id) {
+            return dbRequest('readonly', (store) => store.get(id));
+        }
+
+        async function getAllRecords() {
+            const records = await dbRequest('readonly', (store) => store.getAll());
+            return records.sort((a, b) => b.uploadedAt.localeCompare(a.uploadedAt));
+        }
+
+        async function clearLocalHistory() {
+            if (!confirm('清空本地上传历史？R2 中的文件不会被删除。')) return;
+            try {
+                await dbRequest('readwrite', (store) => store.clear());
+                await renderHistory();
+                showStatus('本地历史已清空。', 'success');
+            } catch (err) {
+                console.error('Failed to clear local history:', err);
+                showStatus('清空本地历史失败。', 'error');
+            }
+        }
+
+        async function handleBatchUpload(fileList) {
+            const key = checkAuth();
+            if (!key) return;
+
+            if (fileList.length > MAX_FILES) {
+                showStatus(`文件过多，单次最多 ${MAX_FILES} 个。`, 'error');
+                return;
+            }
+
+            const files = Array.from(fileList);
+            for (const file of files) {
+                if (file.size > 100 * 1024 * 1024) {
+                    showStatus(`${file.name} 超过 100MB。`, 'error');
+                    return;
+                }
+            }
+
+            setUploading(true);
+            const uploadedUrls = [];
+            let successCount = 0;
+            let failCount = 0;
+            let lastError = null;
+
+            for (let index = 0; index < files.length; index++) {
+                const file = files[index];
+                updateProgress(Math.round((index / files.length) * 100));
+                showStatus(`正在上传 ${index + 1}/${files.length}: ${file.name}...`, 'normal');
+
+                try {
+                    const result = await uploadSingleFile(file, key);
+                    const record = {
+                        id: result.key,
+                        filename: result.filename || file.name,
+                        key: result.key,
+                        url: result.url,
+                        size: result.size || file.size,
+                        contentType: result.contentType || file.type || 'application/octet-stream',
+                        uploadedAt: result.uploadedAt || new Date().toISOString(),
+                        status: 'active',
+                        deletedAt: null
+                    };
+                    await saveRecord(record).catch((err) => {
+                        console.error('Failed to save local history:', err);
+                    });
+                    uploadedUrls.push(record.url);
+                    successCount++;
+                    await renderHistory().catch((err) => {
+                        console.error('Failed to render local history:', err);
+                    });
+                } catch (err) {
+                    failCount++;
+                    lastError = err;
+                    console.error(`Failed to upload ${file.name}:`, err);
+                }
+            }
+
+            updateProgress(100);
+            setUploading(false);
+            fileInput.value = '';
+
+            if (successCount === 0) {
+                const message = lastError && lastError.message ? lastError.message : '全部上传失败。';
+                showStatus(message, 'error');
+                return;
+            }
+
+            const copied = await copyText(uploadedUrls.join('\n'));
+            const suffix = failCount > 0 ? `，${failCount} 个失败` : '';
+            const copySuffix = copied ? '链接已复制。' : '链接复制失败，请从历史记录手动复制。';
+            showStatus(`上传完成：${successCount}/${files.length}。${copySuffix}${suffix}`, 'success');
+        }
+
+        async function uploadSingleFile(file, key) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const res = await fetch('/upload', {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${key}` },
+                body: formData
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.msg || '上传失败。');
+            return data;
+        }
+
+        async function deleteRecord(record) {
+            const confirmed = confirm(`删除这条上传记录？\n\n${record.filename}`);
+            if (!confirmed) return;
+
+            if (DELETE_MODE !== 'hard') {
+                try {
+                    await markSoftDeleted(record.id);
+                } catch (err) {
+                    console.error('Failed to update local history:', err);
+                    showStatus('本地历史更新失败。', 'error');
+                    return;
+                }
+                showStatus('已从本地历史移除。', 'success');
+                return;
+            }
+
+            const key = checkAuth();
+            if (!key) return;
+
+            try {
+                const res = await fetch('/object', {
+                    method: 'DELETE',
+                    headers: {
+                        Authorization: `Bearer ${key}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ key: record.key })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    showStatus(data.msg || '删除失败。', 'error');
+                    return;
+                }
+            } catch (err) {
+                console.error('Delete failed:', err);
+                showStatus('删除请求失败，请稍后重试。', 'error');
+                return;
+            }
+
+            try {
+                await markSoftDeleted(record.id);
+                showStatus('文件已删除。', 'success');
+            } catch (err) {
+                console.error('Failed to update local history after delete:', err);
+                showStatus('文件已删除，但本地历史更新失败。', 'error');
+            }
+        }
+
+        async function markSoftDeleted(id) {
+            if (DELETE_MODE === 'none') return;
+            const record = await getRecord(id);
+            if (!record) return;
+            record.status = 'soft_deleted';
+            record.deletedAt = new Date().toISOString();
+            await saveRecord(record);
+            await renderHistory();
+        }
+
+        async function renderHistory() {
+            const records = (await getAllRecords())
+                .filter((record) => record.status !== 'soft_deleted')
+                .slice(0, HISTORY_LIMIT);
+
+            historyList.replaceChildren();
+            historyCount.textContent = String(records.length);
+
+            if (records.length === 0) {
+                historyList.appendChild(createEmptyState('暂无上传记录。'));
+                return;
+            }
+
+            records.forEach((record) => historyList.appendChild(createHistoryItem(record)));
+        }
+
+        async function pruneHistory() {
+            const records = await getAllRecords();
+            const staleRecords = records.slice(HISTORY_LIMIT);
+            await Promise.all(staleRecords.map((record) => dbRequest('readwrite', (store) => store.delete(record.id))));
+        }
+
+        function createHistoryItem(record) {
+            const li = document.createElement('li');
+            li.className = 'history-item';
+
+            const info = document.createElement('div');
+            info.className = 'file-info';
+
+            const name = document.createElement('div');
+            name.className = 'file-name';
+            name.title = record.filename;
+            name.textContent = record.filename;
+
+            const meta = document.createElement('div');
+            meta.className = 'file-meta';
+            appendMeta(meta, formatDate(record.uploadedAt));
+            appendMeta(meta, formatFileSize(record.size));
+            appendMeta(meta, '已上传');
+
+            info.append(name, meta);
+
+            const actions = document.createElement('div');
+            actions.className = 'actions';
+
+            actions.append(
+                createActionButton('Link', (button) => copyFormatted(record.url, 'raw', button)),
+                createActionButton('MD', (button) => copyFormatted(record.url, 'md', button)),
+                createActionButton('HTML', (button) => copyFormatted(record.url, 'html', button))
+            );
+
+            if (DELETE_MODE === 'soft' || DELETE_MODE === 'hard') {
+                actions.append(createActionButton('删除', () => deleteRecord(record), true));
+            }
+
+            li.append(info, actions);
+            return li;
+        }
+
+        function appendMeta(parent, value) {
+            if (!value) return;
+            const span = document.createElement('span');
+            span.textContent = value;
+            parent.appendChild(span);
+        }
+
+        function createActionButton(label, onClick, danger = false) {
+            const button = document.createElement('button');
+            button.className = danger ? 'action-btn danger' : 'action-btn';
+            button.type = 'button';
+            button.textContent = label;
+            button.addEventListener('click', () => onClick(button));
+            return button;
+        }
+
+        function createEmptyState(message) {
+            const empty = document.createElement('li');
+            empty.className = 'empty-state';
+            empty.textContent = message;
+            return empty;
+        }
+
+        function normalizeDeleteMode(value) {
+            return value === 'soft' || value === 'hard' ? value : 'none';
+        }
+
+        function setUploading(isUploading) {
+            if (isUploading) {
+                dropZone.classList.add('uploading');
+                dropZone.querySelector('.icon').innerText = '⏳';
+            } else {
+                dropZone.classList.remove('uploading');
+                dropZone.querySelector('.instruction').innerText = '拖入文件或粘贴上传';
+                dropZone.querySelector('.sub-instruction').innerText = '单次最多 10 个文件';
+                dropZone.querySelector('.icon').innerText = '📦';
+                updateProgress(0);
+            }
+        }
+
+        function updateProgress(percent) {
+            progressBar.style.width = `${percent}%`;
+        }
+
+        function showStatus(msg, type) {
+            statusDiv.textContent = msg;
+            statusDiv.className = '';
+            statusDiv.classList.add('show', type);
+            statusDiv.setAttribute('role', type === 'error' ? 'alert' : 'status');
+        }
+
+        function formatFileSize(bytes) {
+            if (!bytes || bytes === 0) return '';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1);
+            return `${Math.round((bytes / Math.pow(k, i)) * 100) / 100} ${sizes[i]}`;
+        }
+
+        function formatDate(value) {
+            if (!value) return '';
+            return new Date(value).toLocaleString([], {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        async function copyFormatted(url, type, button) {
+            let text = url;
+            if (type === 'md') {
+                text = `![](${url})`;
+            } else if (type === 'html') {
+                text = `<img src="${url}" alt="image" />`;
+            }
+            const copied = await copyText(text);
+            if (copied) showCopied(button);
+        }
+
+        async function copyText(text) {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                }
+                throw new Error('Clipboard API unavailable');
+            } catch (err) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-9999px';
+                textArea.style.top = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                if (!successful) {
+                    showStatus('复制失败，请手动复制。', 'error');
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        function showCopied(button) {
+            const originalText = button.textContent;
+            button.textContent = '已复制';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('copied');
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

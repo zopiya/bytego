@@ -1,0 +1,27 @@
+{
+  "name": "bytego-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "deploy:dry-run": "wrangler deploy --dry-run",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "cf:whoami": "wrangler whoami",
+    "r2:list": "wrangler r2 bucket list",
+    "r2:domains": "wrangler r2 bucket domain list bytego",
+    "secret:list": "wrangler secret list",
+    "secret:put": "wrangler secret put AUTH_KEY",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "hono": "^4.12.21"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231121.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.3.2",
+    "wrangler": "^4.93.0"
+  }
+}
